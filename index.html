@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Banque — Banque & Assurance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config={
+            theme:{
+                extend:{
+                    colors:{
+                        bank:{
+                            50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',300:'#86efac',400:'#4ade80',
+                            500:'#16a34a',600:'#15803d',700:'#166534',800:'#14532d',900:'#052e16'
+                        }
+                    },
+                    fontFamily:{
+                        sans:['Inter','sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        *{font-family:'Inter',sans-serif}
+        .nav-link{position:relative}.nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:#16a34a;transition:width 300ms}.nav-link:hover::after{width:100%}
+        .hero-gradient{background:linear-gradient(135deg,#14532d 0%,#166534 30%,#15803d 60%,#16a34a 100%)}
+        .pattern-bg{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.08) 1px,transparent 0);background-size:32px 32px}
+        .card-hover{transition:all 300ms}.card-hover:hover{transform:translateY(-4px);box-shadow:0 20px 25px -5px rgba(0,0,0,0.1)}
+        .input-focus:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,0.15)}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}.alert-blink{animation:blink 1s ease-in-out infinite}
+        @keyframes fadeIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}.modal-enter{animation:fadeIn 300ms ease-out}
+        .login-overlay{backdrop-filter:blur(8px)}
+        @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}.toast-enter{animation:slideUp 400ms ease-out}
+        .page-section{display:none}.page-section.active{display:block}
+        [data-page] a[data-nav]{cursor:pointer}
+        
+        /* Images interactives banque */
+        .bank-img-container{position:relative;overflow:hidden;border-radius:1rem;cursor:pointer}
+        .bank-img-container img{transition:transform 500ms ease}
+        .bank-img-container:hover img{transform:scale(1.08)}
+        .bank-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.2) 40%,transparent 100%);opacity:0;transition:opacity 300ms;display:flex;align-items:end;padding:1.5rem}
+        .bank-img-container:hover .bank-img-overlay{opacity:1}
+        .bank-img-text{color:white;font-weight:600;font-size:1.125rem;transform:translateY(10px);transition:transform 300ms}
+        .bank-img-container:hover .bank-img-text{transform:translateY(0)}
+        
+        /* Bouton retour amélioré */
+        .back-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.625rem 1.25rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9999px;color:#15803d;font-size:0.875rem;font-weight:500;transition:all 200ms;cursor:pointer}
+        .back-btn:hover{background:#15803d;color:#fff;transform:translateX(-4px)}
+    </style>
+<base target="_blank">
+</head>
+<body class="bg-white text-slate-900 antialiased">
+
+<!-- ======================== TOAST ======================== -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-[200] space-y-3"></div>
+
+<!-- ======================== LOGIN MODAL ======================== -->
+<div id="login-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 login-overlay" onclick="closeLogin()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="modal-enter bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden">
+            <div class="hero-gradient pattern-bg px-8 py-6"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"><i data-lucide="shield-check" class="w-5 h-5 text-white"></i></div><div><h3 class="text-white font-semibold text-lg">Espace client</h3><p class="text-white/60 text-xs">Connexion sécurisée SSL</p></div></div><button onclick="closeLogin()" class="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white rounded-lg hover:bg-white/10"><i data-lucide="x" class="w-5 h-5"></i></button></div></div>
+            <form onsubmit="handleLogin(event)" class="p-8">
+                <div class="space-y-5">
+                    <div><label class="block text-sm font-medium text-slate-700 mb-2">Identifiant <span class="text-red-500">*</span></label><div class="relative"><i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i><input id="modal-id" type="text" required placeholder="Numéro client (ex: 98765432)" class="input-focus w-full pl-11 pr-4 py-3.5 border border-slate-200 rounded-xl text-sm outline-none transition-all"></div></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-2">Mot de passe <span class="text-red-500">*</span></label><div class="relative"><i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i><input id="modal-pwd" type="password" required placeholder="Votre mot de passe" class="input-focus w-full pl-11 pr-12 py-3.5 border border-slate-200 rounded-xl text-sm outline-none transition-all"><button type="button" onclick="togglePwd()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i></button></div></div>
+                    <div class="flex items-center justify-between"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-slate-300 text-bank-600"><span class="text-sm text-slate-600">Se souvenir</span></label><a href="#" class="text-sm font-medium text-bank-600">Oublié ?</a></div>
+                    <button type="submit" id="login-btn" class="w-full py-4 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm shadow-lg shadow-bank-600/20 flex items-center justify-center gap-2"><i data-lucide="log-in" class="w-4 h-4"></i>Se connecter</button>
+                </div>
+                <div class="flex items-center gap-4 my-6"><div class="flex-1 h-px bg-slate-200"></div><span class="text-xs text-slate-400 uppercase tracking-wider">ou</span><div class="flex-1 h-px bg-slate-200"></div></div>
+                <button type="button" class="w-full py-3.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-all text-sm flex items-center justify-center gap-2"><i data-lucide="fingerprint" class="w-4 h-4"></i>Connexion par empreinte</button>
+            </form>
+            <div class="px-8 pb-6"><div class="bg-slate-50 rounded-xl p-4 flex gap-3"><i data-lucide="info" class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5"></i><p class="text-xs text-slate-500 leading-relaxed">Connexion sécurisée SSL 256 bits. MaBanque ne vous demandera jamais votre mot de passe par email.</p></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ====================== PAGE: ACCUEIL ======================= -->
+<!-- ============================================================ -->
+<div data-page="home" class="page-section active">
+
+<!-- NAV PUB -->
+<nav id="pub-nav" class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <a data-nav="home" class="flex items-center gap-3 cursor-pointer"><div class="w-10 h-10 bg-bank-600 rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-5 h-5 text-white"></i></div><div><span class="text-lg font-semibold tracking-tight">MaBanque</span><span class="hidden sm:block text-[10px] font-medium text-slate-400 uppercase tracking-widest -mt-1">Banque & Assurance</span></div></a>
+        <div class="hidden lg:flex items-center gap-6">
+            <a data-nav="offres-banque" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Nos offres</a>
+            <a data-nav="particuliers-comptes" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Particuliers</a>
+            <a data-nav="pros-tresorerie" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Professionnels</a>
+            <a data-nav="contact-coordonnees" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Contact</a>
+            <a data-nav="agences-recherche" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Agences</a>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="openLogin()" class="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-bank-700 border border-bank-200 rounded-full hover:bg-bank-50 transition-all"><i data-lucide="lock" class="w-4 h-4"></i>Espace client</button>
+            <button onclick="openLogin()" class="px-5 py-2.5 text-sm font-medium text-white bg-bank-600 rounded-full hover:bg-bank-700 transition-all shadow-lg shadow-bank-600/20">Se connecter</button>
+            <button onclick="document.getElementById('mob').classList.toggle('hidden')" class="lg:hidden p-2 text-slate-600"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        </div>
+    </div>
+    <div id="mob" class="hidden lg:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-1">
+        <a data-nav="offres-banque" class="block px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg">Nos offres</a>
+        <a data-nav="particuliers-comptes" class="block px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg">Particuliers</a>
+        <a data-nav="pros-tresorerie" class="block px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg">Professionnels</a>
+        <a data-nav="contact-coordonnees" class="block px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg">Contact</a>
+        <a data-nav="agences-recherche" class="block px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg">Agences</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-gradient pattern-bg relative min-h-screen flex items-center pt-20 overflow-hidden">
+    <div class="absolute top-20 right-0 w-96 h-96 bg-bank-400/20 rounded-full blur-3xl"></div>
+    <div class="max-w-7xl mx-auto px-6 py-24 lg:py-32 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-8"><span class="w-2 h-2 bg-bank-300 rounded-full animate-pulse"></span><span class="text-xs font-medium text-bank-100 uppercase tracking-wider">Votre banque de confiance</span></div>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white leading-[1.1] tracking-tight mb-6">Vos projets,<br><span class="text-bank-200">notre engagement.</span></h1>
+                <p class="text-lg text-bank-100/80 leading-relaxed max-w-lg mb-10">Accompagnez vos ambitions au quotidien avec des solutions bancaires et d'assurance adaptées à chaque étape de votre vie.</p>
+                <div class="flex flex-wrap gap-4">
+                    <a data-nav="offres-banque" class="inline-flex items-center gap-2 px-8 py-4 bg-white text-bank-800 font-medium rounded-full hover:bg-bank-50 transition-all shadow-xl cursor-pointer">Découvrir nos offres <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+                    <button onclick="openLogin()" class="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-medium rounded-full border border-white/20 hover:bg-white/20 transition-all"><i data-lucide="user" class="w-4 h-4"></i>Accès client</button>
+                </div>
+                <div class="flex items-center gap-8 mt-12 pt-8 border-t border-white/10">
+                    <div><div class="text-2xl font-semibold text-white">2,4M</div><div class="text-xs text-bank-200/60 mt-1">Clients</div></div>
+                    <div class="w-px h-10 bg-white/10"></div>
+                    <div><div class="text-2xl font-semibold text-white">4 200+</div><div class="text-xs text-bank-200/60 mt-1">Conseillers</div></div>
+                    <div class="w-px h-10 bg-white/10"></div>
+                    <div><div class="text-2xl font-semibold text-white">1 800</div><div class="text-xs text-bank-200/60 mt-1">Agences</div></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"><span class="text-[10px] text-bank-200/40 uppercase tracking-widest">Défiler</span><div class="w-5 h-8 border-2 border-bank-200/20 rounded-full flex justify-center pt-1.5"><div class="w-1 h-2 bg-bank-200/40 rounded-full animate-bounce"></div></div></div>
+</section>
+
+<!-- IMAGES INTERACTIVES BANQUE -->
+<section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Notre univers</span>
+            <h2 class="text-3xl lg:text-4xl font-semibold tracking-tight mb-4">Un environnement bancaire <span class="text-bank-600">moderne</span></h2>
+            <p class="text-slate-500 leading-relaxed">Découvrez nos espaces d'accueil, nos agences digitales et l'accompagnement personnalisé de nos conseillers.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bank-img-container aspect-[4/3] shadow-lg" onclick="showToast('Agence Paris Haussmann — Ouverte 6j/7','info')">
+                <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=450&fit=crop" alt="Siège bancaire" class="w-full h-full object-cover">
+                <div class="bank-img-overlay"><div><div class="bank-img-text">Siège & Direction</div><p class="text-white/80 text-sm mt-1">Paris Haussmann</p></div></div>
+            </div>
+            <div class="bank-img-container aspect-[4/3] shadow-lg" onclick="showToast('Agence Lyon Part-Dieu — Ouverte 6j/7','info')">
+                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=450&fit=crop" alt="Paiement digital" class="w-full h-full object-cover">
+                <div class="bank-img-overlay"><div><div class="bank-img-text">Paiement Digital</div><p class="text-white/80 text-sm mt-1">Solutions mobiles</p></div></div>
+            </div>
+            <div class="bank-img-container aspect-[4/3] shadow-lg" onclick="showToast('Conseiller disponible en visio','info')">
+                <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600&h=450&fit=crop" alt="Conseiller clientèle" class="w-full h-full object-cover">
+                <div class="bank-img-overlay"><div><div class="bank-img-text">Conseil Personnalisé</div><p class="text-white/80 text-sm mt-1">Rendez-vous sur mesure</p></div></div>
+            </div>
+            <div class="bank-img-container aspect-[4/3] shadow-lg" onclick="showToast('Espace bourse & investissement','info')">
+                <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=450&fit=crop" alt="Bourse & investissement" class="w-full h-full object-cover">
+                <div class="bank-img-overlay"><div><div class="bank-img-text">Bourse & Patrimoine</div><p class="text-white/80 text-sm mt-1">Investissement sur mesure</p></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICES -->
+<section class="py-24 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-16"><span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Nos solutions</span><h2 class="text-3xl lg:text-4xl font-semibold tracking-tight mb-4">Tout pour vos finances</h2><p class="text-slate-500 leading-relaxed">Des offres complètes pour gérer votre quotidien et protéger votre patrimoine.</p></div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a data-nav="particuliers-comptes" class="card-hover bg-white border border-slate-200 rounded-2xl p-8 group cursor-pointer"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-bank-100 transition-colors"><i data-lucide="credit-card" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Comptes & Cartes</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Comptes courant, épargne, cartes bancaires adaptées.</p><span class="inline-flex items-center gap-1 text-sm font-medium text-bank-600 group-hover:gap-2 transition-all">En savoir plus <i data-lucide="arrow-right" class="w-4 h-4"></i></span></a>
+            <a data-nav="particuliers-credits" class="card-hover bg-white border border-slate-200 rounded-2xl p-8 group cursor-pointer"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-bank-100 transition-colors"><i data-lucide="home" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Prêts & Crédits</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Immobilier, consommation, auto : taux compétitifs.</p><span class="inline-flex items-center gap-1 text-sm font-medium text-bank-600 group-hover:gap-2 transition-all">En savoir plus <i data-lucide="arrow-right" class="w-4 h-4"></i></span></a>
+            <a data-nav="offres-banque" class="card-hover bg-white border border-slate-200 rounded-2xl p-8 group cursor-pointer"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-bank-100 transition-colors"><i data-lucide="piggy-bank" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Épargne</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Livrets, PEA, assurance-vie.</p><span class="inline-flex items-center gap-1 text-sm font-medium text-bank-600 group-hover:gap-2 transition-all">En savoir plus <i data-lucide="arrow-right" class="w-4 h-4"></i></span></a>
+            <a data-nav="offres-assurance" class="card-hover bg-white border border-slate-200 rounded-2xl p-8 group cursor-pointer"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-bank-100 transition-colors"><i data-lucide="shield" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Assurances</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Habitat, auto, santé, prévoyance.</p><span class="inline-flex items-center gap-1 text-sm font-medium text-bank-600 group-hover:gap-2 transition-all">En savoir plus <i data-lucide="arrow-right" class="w-4 h-4"></i></span></a>
+            <a data-nav="offres-banque" class="card-hover bg-white border border-slate-200 rounded-2xl p-8 group cursor-pointer"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-bank-100 transition-colors"><i data-lucide="smartphone" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Banque en ligne</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Gérez vos comptes 24h/24.</p><span class="inline-flex items-center gap-1 text-sm font-medium text-bank-600 group-hover:gap-2 transition-all">En savoir plus <i data-lucide="arrow-right" class="w-4 h-4"></i></span></a>
+            <a data-nav="offres-banque" class="card-hover bg-white border border-slate-200 rounded-2xl p-8 group cursor-pointer"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-bank-100 transition-colors"><i data-lucide="trending-up" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Investissement</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Bourse, OPCVM, gestion pilotée.</p><span class="inline-flex items-center gap-1 text-sm font-medium text-bank-600 group-hover:gap-2 transition-all">En savoir plus <i data-lucide="arrow-right" class="w-4 h-4"></i></span></a>
+        </div>
+    </div>
+</section>
+
+<!-- PART/PRO -->
+<section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-8">
+        <a data-nav="particuliers-comptes" class="relative rounded-2xl overflow-hidden group card-hover block cursor-pointer"><img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&h=500&fit=crop" class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div><div class="absolute bottom-0 left-0 right-0 p-8"><span class="inline-block px-3 py-1 bg-bank-600 text-white text-[10px] font-semibold uppercase tracking-wider rounded-full mb-3">Particuliers</span><h3 class="text-2xl font-semibold text-white mb-2">Solutions au quotidien</h3><p class="text-sm text-white/70">Comptes, épargne, crédit immobilier, assurances…</p></div></a>
+        <a data-nav="pros-tresorerie" class="relative rounded-2xl overflow-hidden group card-hover block cursor-pointer"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop" class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div><div class="absolute bottom-0 left-0 right-0 p-8"><span class="inline-block px-3 py-1 bg-slate-700 text-white text-[10px] font-semibold uppercase tracking-wider rounded-full mb-3">Professionnels</span><h3 class="text-2xl font-semibold text-white mb-2">Accompagnement sur mesure</h3><p class="text-sm text-white/70">Gestion de trésorerie, financement, solutions de paiement.</p></div></a>
+    </div>
+</section>
+
+<!-- TÉMOIGNAGES / PROFESSIONNALISME -->
+<section class="py-24 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Ils nous font confiance</span>
+            <h2 class="text-3xl lg:text-4xl font-semibold tracking-tight mb-4">Reconnue par nos clients</h2>
+            <p class="text-slate-500 leading-relaxed">2,4 millions de particuliers et 180 000 entreprises nous font confiance au quotidien.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <div class="flex items-center gap-1 mb-4">
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed mb-6">"Un accompagnement exemplaire pour mon prêt immobilier. Mon conseiller a été disponible à chaque étape du processus."</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-bank-100 rounded-full flex items-center justify-center"><span class="text-sm font-semibold text-bank-700">SL</span></div>
+                    <div><p class="text-sm font-medium">Sophie L.</p><p class="text-xs text-slate-400">Client depuis 2018</p></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <div class="flex items-center gap-1 mb-4">
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed mb-6">"La banque en ligne est intuitive et sécurisée. Je gère mes comptes en quelques clics, même à l'étranger."</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-bank-100 rounded-full flex items-center justify-center"><span class="text-sm font-semibold text-bank-700">PM</span></div>
+                    <div><p class="text-sm font-medium">Pierre M.</p><p class="text-xs text-slate-400">Client depuis 2021</p></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <div class="flex items-center gap-1 mb-4">
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed mb-6">"Notre entreprise a bénéficié d'un financement pro rapide et d'une gestion de trésorerie optimisée. Merci !"</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><span class="text-sm font-semibold text-slate-700">AD</span></div>
+                    <div><p class="text-sm font-medium">Alexandre D.</p><p class="text-xs text-slate-400">Dirigeant, TechFlow SAS</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-slate-950 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-12 border-b border-slate-800">
+            <div><a data-nav="home" class="flex items-center gap-3 mb-4 cursor-pointer"><div class="w-9 h-9 bg-bank-600 rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-4 h-4 text-white"></i></div><span class="text-lg font-semibold text-white">MaBanque</span></a><p class="text-sm text-slate-500 leading-relaxed">Banque coopérative et de proximité. Template démonstratif.</p></div>
+            <div><h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Produits</h4><ul class="space-y-3"><li><a data-nav="particuliers-comptes" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Comptes</a></li><li><a data-nav="particuliers-credits" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Crédits</a></li><li><a data-nav="offres-banque" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Épargne</a></li><li><a data-nav="offres-assurance" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Assurances</a></li></ul></div>
+            <div><h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Services</h4><ul class="space-y-3"><li><a data-nav="offres-banque" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Banque en ligne</a></li><li><a data-nav="contact-coordonnees" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Contact</a></li><li><a data-nav="agences-recherche" class="text-sm text-slate-500 hover:text-white transition-colors cursor-pointer">Agences</a></li></ul></div>
+            <div><h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Légal</h4><ul class="space-y-3"><li><a href="#" class="text-sm text-slate-500 hover:text-white transition-colors">Mentions légales</a></li><li><a href="#" class="text-sm text-slate-500 hover:text-white transition-colors">Confidentialité</a></li><li><a href="#" class="text-sm text-slate-500 hover:text-white transition-colors">Cookies</a></li></ul></div>
+        </div>
+        <p class="pt-8 text-xs text-slate-600 text-center">© 2026 Ma Banque</p>
+    </div>
+</footer>
+</div><!-- /home -->
+
+<!-- ============================================================ -->
+<!-- =================== NAV INTERNE (réutilisable) ============= -->
+<!-- ============================================================ -->
+<template id="tmpl-nav">
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <a data-nav="home" class="flex items-center gap-3 cursor-pointer"><div class="w-10 h-10 bg-bank-600 rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-5 h-5 text-white"></i></div><div><span class="text-lg font-semibold tracking-tight">MaBanque</span><span class="hidden sm:block text-[10px] font-medium text-slate-400 uppercase tracking-widest -mt-1">Banque & Assurance</span></div></a>
+        <div class="hidden lg:flex items-center gap-6" id="inner-nav-links"></div>
+        <div class="flex items-center gap-3">
+            <button onclick="openLogin()" class="px-5 py-2.5 text-sm font-medium text-white bg-bank-600 rounded-full hover:bg-bank-700 transition-all">Se connecter</button>
+            <button onclick="document.getElementById('mob2').classList.toggle('hidden')" class="lg:hidden p-2 text-slate-600"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        </div>
+    </div>
+    <div id="mob2" class="hidden lg:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-1" id="mob-nav-links"></div>
+</nav>
+</template>
+
+<template id="tmpl-breadcrumb">
+<div class="pt-28 pb-8 max-w-7xl mx-auto px-6">
+    <a data-nav="__back__" class="inline-flex items-center gap-2 text-sm font-medium text-bank-600 hover:text-bank-700 transition-colors mb-6 cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i><span id="bc-back-label">Retour</span></a>
+    <div class="flex items-center gap-3 text-sm" id="bc-path"></div>
+</div>
+</template>
+
+<template id="tmpl-footer">
+<footer class="bg-slate-950 pt-12 pb-8"><div class="max-w-7xl mx-auto px-6 text-center"><p class="text-xs text-slate-600">© 2026 Ma Banque</p></div></footer>
+</template>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: OFFRES BANQUE ==================== -->
+<!-- ============================================================ -->
+<div data-page="offres-banque" class="page-section">
+<div id="nav-ob"></div>
+<div id="bc-ob"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Nos offres bancaires</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Des solutions pour chaque <span class="text-bank-600">étape de vie</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Comptes, épargne, crédits et services digitaux conçus pour simplifier votre quotidien financier.</p>
+    <div class="grid lg:grid-cols-3 gap-6 mb-16">
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8"><div class="w-14 h-14 bg-bank-50 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="wallet" class="w-7 h-7 text-bank-600"></i></div><h3 class="text-xl font-semibold mb-3">Compte Essentiel</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Compte courant avec carte Visa Classic, virements illimités et app mobile.</p><div class="text-3xl font-semibold text-bank-600 mb-1">2,90€<span class="text-sm font-normal text-slate-400">/mois</span></div><p class="text-xs text-slate-400 mb-6">Sans conditions de revenus</p><ul class="space-y-2 mb-6"><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Carte Visa Classic</li><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Virements SEPA gratuits</li><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>App mobile incluse</li><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Retraits DAB gratuits</li></ul><button class="w-full py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Ouvrir ce compte</button></div>
+        <div class="card-hover bg-bank-600 border-2 border-bank-500 rounded-2xl p-8 relative text-white"><div class="absolute -top-3 right-6 px-3 py-1 bg-amber-400 text-amber-900 text-[10px] font-bold uppercase tracking-wider rounded-full">Populaire</div><div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="crown" class="w-7 h-7 text-white"></i></div><h3 class="text-xl font-semibold mb-3">Compte Premium</h3><p class="text-sm text-bank-100/80 leading-relaxed mb-4">Tout-en-un : carte Gold, assurance voyages, sous-comptes, avantages exclusifs.</p><div class="text-3xl font-semibold mb-1">7,90€<span class="text-sm font-normal text-bank-200">/mois</span></div><p class="text-xs text-bank-200/60 mb-6">À partir de 1 500€/mois</p><ul class="space-y-2 mb-6"><li class="flex items-center gap-2 text-sm text-bank-100"><i data-lucide="check" class="w-4 h-4 text-bank-200"></i>Carte Visa Gold</li><li class="flex items-center gap-2 text-sm text-bank-100"><i data-lucide="check" class="w-4 h-4 text-bank-200"></i>Assurance voyages</li><li class="flex items-center gap-2 text-sm text-bank-100"><i data-lucide="check" class="w-4 h-4 text-bank-200"></i>3 sous-comptes offerts</li><li class="flex items-center gap-2 text-sm text-bank-100"><i data-lucide="check" class="w-4 h-4 text-bank-200"></i>Conseiller dédié</li></ul><button class="w-full py-3 bg-white text-bank-700 font-medium rounded-xl hover:bg-bank-50 transition-all text-sm">Ouvrir ce compte</button></div>
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8"><div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="gem" class="w-7 h-7 text-slate-700"></i></div><h3 class="text-xl font-semibold mb-3">Compte Infinite</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Excellence bancaire : carte Infinite, conciergerie, gestion de patrimoine.</p><div class="text-3xl font-semibold text-slate-900 mb-1">19,90€<span class="text-sm font-normal text-slate-400">/mois</span></div><p class="text-xs text-slate-400 mb-6">À partir de 4 000€/mois</p><ul class="space-y-2 mb-6"><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Carte Visa Infinite</li><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Service conciergerie</li><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Gestion patrimoniale</li><li class="flex items-center gap-2 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Assurances premium</li></ul><button class="w-full py-3 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 transition-all text-sm">Ouvrir ce compte</button></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="offres-assurance" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-full hover:bg-slate-200 transition-all text-sm cursor-pointer">Voir les assurances <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
+</section>
+<div id="ft-ob"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: OFFRES ASSURANCE ================= -->
+<!-- ============================================================ -->
+<div data-page="offres-assurance" class="page-section">
+<div id="nav-oa"></div><div id="bc-oa"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <!-- Bouton retour à la page précédente -->
+    <div class="pt-28 pb-2">
+        <a data-nav="offres-banque" class="back-btn mb-4">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Retour aux offres bancaires
+        </a>
+    </div>
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Assurances</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Protégez ce qui <span class="text-bank-600">compte pour vous</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Habitat, auto, santé, prévoyance… Des garanties sur mesure à des tarifs compétitifs.</p>
+    <div class="grid sm:grid-cols-2 gap-8 mb-16">
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=400&fit=crop" class="w-full h-48 object-cover" alt="Assurance Habitation">
+            <div class="p-8">
+                <div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-4 -mt-14 relative border-4 border-white"><i data-lucide="home" class="w-6 h-6 text-bank-600"></i></div>
+                <h3 class="text-xl font-semibold mb-2">Assurance Habitation</h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">Multirisque : dégâts des eaux, incendie, vol, responsabilité civile.</p>
+                <div class="text-sm font-medium text-bank-600 mb-4">À partir de 8,90€/mois</div>
+                <button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button>
+            </div>
+        </div>
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1449965408869-eaf3c104ef9b?w=800&h=400&fit=crop" class="w-full h-48 object-cover" alt="Assurance Auto">
+            <div class="p-8">
+                <div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-4 -mt-14 relative border-4 border-white"><i data-lucide="car" class="w-6 h-6 text-bank-600"></i></div>
+                <h3 class="text-xl font-semibold mb-2">Assurance Auto</h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">Tous risques, au tiers ou intermédiaire. Assistance 24h/24.</p>
+                <div class="text-sm font-medium text-bank-600 mb-4">À partir de 22,50€/mois</div>
+                <button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button>
+            </div>
+        </div>
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=400&fit=crop" class="w-full h-48 object-cover" alt="Assurance Santé">
+            <div class="p-8">
+                <div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-4 -mt-14 relative border-4 border-white"><i data-lucide="heart-pulse" class="w-6 h-6 text-bank-600"></i></div>
+                <h3 class="text-xl font-semibold mb-2">Assurance Santé</h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">Complémentaire santé 3 niveaux de garanties, réseau de soins élargi.</p>
+                <div class="text-sm font-medium text-bank-600 mb-4">À partir de 15,00€/mois</div>
+                <button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button>
+            </div>
+        </div>
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop" class="w-full h-48 object-cover" alt="Prévoyance & Décès">
+            <div class="p-8">
+                <div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-4 -mt-14 relative border-4 border-white"><i data-lucide="umbrella" class="w-6 h-6 text-bank-600"></i></div>
+                <h3 class="text-xl font-semibold mb-2">Prévoyance & Décès</h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">Capital décès, rente éducation, garantie invalidité.</p>
+                <div class="text-sm font-medium text-bank-600 mb-4">À partir de 12,00€/mois</div>
+                <button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button>
+            </div>
+        </div>
+    </div>
+    <div class="flex justify-center gap-4">
+        <a data-nav="offres-banque" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-full hover:bg-slate-200 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour aux offres bancaires</a>
+    </div>
+</section>
+<div id="ft-oa"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: PARTICULIERS COMPTES ============= -->
+<!-- ============================================================ -->
+<div data-page="particuliers-comptes" class="page-section">
+<div id="nav-pc"></div><div id="bc-pc"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Particuliers — Comptes</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Les comptes qui <span class="text-bank-600">s'adaptent à vous</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Du compte de base au compte premium, choisissez la formule qu'il vous faut.</p>
+    <div class="grid md:grid-cols-2 gap-8 mb-16">
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-bank-100 rounded-xl flex items-center justify-center"><i data-lucide="banknote" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-xl font-semibold">Compte Courant</h3></div><p class="text-sm text-slate-500 leading-relaxed mb-6">Recevoir vos revenus, régler vos dépenses, effectuer vos virements. Avec carte de débit ou crédit.</p><ul class="space-y-3 mb-6"><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Réception de virements et prélèvements</li><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Carte bancaire Visa ou Mastercard</li><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Chéquier sur demande</li><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Accès espace client et app mobile</li></ul><div class="text-2xl font-semibold text-bank-600">Gratuit*<span class="text-xs font-normal text-slate-400 block mt-1">*Sous condition de domiciliation de revenus</span></div></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-bank-100 rounded-xl flex items-center justify-center"><i data-lucide="piggy-bank" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-xl font-semibold">Livret d'Épargne</h3></div><p class="text-sm text-slate-500 leading-relaxed mb-6">Fructifiez votre épargne en sécurité. Livret A, LDDS, livret bancaire : solutions défiscalisées.</p><ul class="space-y-3 mb-6"><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Livret A : 3% de rendement</li><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>LDDS : jusqu'à 12 000€ de dépôt</li><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Retrait libre à tout moment</li><li class="flex items-start gap-3 text-sm text-slate-600"><i data-lucide="check-circle" class="w-5 h-5 text-bank-500 flex-shrink-0 mt-0.5"></i>Exonération d'impôt sur les intérêts</li></ul><div class="text-2xl font-semibold text-bank-600">Gratuit<span class="text-xs font-normal text-slate-400 block mt-1">Ouverture et gestion sans frais</span></div></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="particuliers-credits" class="inline-flex items-center gap-2 px-6 py-3 bg-bank-600 text-white font-medium rounded-full hover:bg-bank-700 transition-all text-sm cursor-pointer">Voir les crédits <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
+</section>
+<div id="ft-pc"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: PARTICULIERS CREDITS ============== -->
+<!-- ============================================================ -->
+<div data-page="particuliers-credits" class="page-section">
+<div id="nav-pcr"></div><div id="bc-pcr"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Particuliers — Crédits</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Financez vos <span class="text-bank-600">projets de vie</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Immobilier, auto, travaux… Des solutions aux taux compétitifs.</p>
+    <div class="space-y-8 mb-16">
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200 flex flex-col lg:flex-row gap-8 items-start"><img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop" class="w-full lg:w-80 h-48 object-cover rounded-xl flex-shrink-0"><div class="flex-1"><h3 class="text-xl font-semibold mb-2">Crédit Immobilier</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Résidence principale ou secondaire, investissement locatif. Taux fixe ou variable, 7 à 25 ans.</p><div class="flex flex-wrap gap-3 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 3,20%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Jusqu'à 500 000€</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Simuler</button></div></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200 flex flex-col lg:flex-row gap-8 items-start"><img src="https://images.unsplash.com/photo-1449965408869-eaf3c104ef9b?w=400&h=250&fit=crop" class="w-full lg:w-80 h-48 object-cover rounded-xl flex-shrink-0"><div class="flex-1"><h3 class="text-xl font-semibold mb-2">Crédit Auto / Moto</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Neuf ou occasion, mensualités adaptées. Réponse sous 24h.</p><div class="flex flex-wrap gap-3 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 2,90%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">12 à 72 mois</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Simuler</button></div></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200 flex flex-col lg:flex-row gap-8 items-start"><img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=250&fit=crop" class="w-full lg:w-80 h-48 object-cover rounded-xl flex-shrink-0"><div class="flex-1"><h3 class="text-xl font-semibold mb-2">Crédit Conso & Travaux</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Rénovation, aménagement, projets personnels. Remboursement anticipé sans frais.</p><div class="flex flex-wrap gap-3 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 1,90%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">1 000€ à 75 000€</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Simuler</button></div></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="particuliers-comptes" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-full hover:bg-slate-200 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour aux comptes</a></div>
+</section>
+<div id="ft-pcr"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: PROS TRESORERIE =================== -->
+<!-- ============================================================ -->
+<div data-page="pros-tresorerie" class="page-section">
+<div id="nav-pt"></div><div id="bc-pt"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Professionnels — Trésorerie</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Optimisez votre <span class="text-bank-600">trésorerie</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Outils performants pour piloter vos flux, sécuriser vos encaissements et simplifier vos paiements.</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5"><i data-lucide="arrow-left-right" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Compte Pro</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Carte business, virements SEPA/ISO en euros et devises.</p><ul class="space-y-2 text-sm text-slate-600"><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Visa Business</li><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Virements SEPA/ISO</li><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Export comptable</li></ul></div>
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5"><i data-lucide="credit-card" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Terminal de Paiement</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">TPE fixe, mobile ou en ligne. CB, Apple Pay, Google Pay.</p><ul class="space-y-2 text-sm text-slate-600"><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>TPE mobile 4G</li><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Paiement en ligne</li><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>J+1 de règlement</li></ul></div>
+        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mb-5"><i data-lucide="bar-chart-3" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-lg font-semibold mb-2">Gestion de Trésorerie</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Tableau de bord temps réel, prévisions, placements court terme.</p><ul class="space-y-2 text-sm text-slate-600"><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Prévisionnel 90 jours</li><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Alertes de seuil</li><li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-bank-500"></i>Placement court terme</li></ul></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="pros-financement" class="inline-flex items-center gap-2 px-6 py-3 bg-bank-600 text-white font-medium rounded-full hover:bg-bank-700 transition-all text-sm cursor-pointer">Voir les financements pro <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
+</section>
+<div id="ft-pt"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: PROS FINANCEMENT ================= -->
+<!-- ============================================================ -->
+<div data-page="pros-financement" class="page-section">
+<div id="nav-pf"></div><div id="bc-pf"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Professionnels — Financement</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Financer votre <span class="text-bank-600">croissance</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Crédit pro, prêt d'équipement, franchise… Pour chaque étape de votre développement.</p>
+    <div class="grid md:grid-cols-2 gap-8 mb-16">
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><div class="w-12 h-12 bg-bank-100 rounded-xl flex items-center justify-center mb-5"><i data-lucide="building" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-xl font-semibold mb-2">Prêt Professionnel</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Fonds de roulement, projet de développement. 10 000€ à 500 000€.</p><div class="flex flex-wrap gap-2 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 2,50%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">6 à 84 mois</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><div class="w-12 h-12 bg-bank-100 rounded-xl flex items-center justify-center mb-5"><i data-lucide="settings" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-xl font-semibold mb-2">Crédit d'Équipement</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Matériel, véhicules pro, outillage. Jusqu'à 150 000€.</p><div class="flex flex-wrap gap-2 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 2,10%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">12 à 60 mois</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><div class="w-12 h-12 bg-bank-100 rounded-xl flex items-center justify-center mb-5"><i data-lucide="store" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-xl font-semibold mb-2">Crédit Franchise</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Droits d'entrée, investissement initial, trésorerie de départ.</p><div class="flex flex-wrap gap-2 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 2,80%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Jusqu'à 300 000€</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><div class="w-12 h-12 bg-bank-100 rounded-xl flex items-center justify-center mb-5"><i data-lucide="landmark" class="w-6 h-6 text-bank-600"></i></div><h3 class="text-xl font-semibold mb-2">Crédit Immobilier Pro</h3><p class="text-sm text-slate-500 leading-relaxed mb-4">Locaux, bureaux, entrepôts. Jusqu'à 80% de la valeur, 20 ans.</p><div class="flex flex-wrap gap-2 mb-4"><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Taux dès 3,00%</span><span class="px-3 py-1 bg-bank-50 text-bank-700 text-xs font-medium rounded-full">Jusqu'à 2M€</span></div><button class="px-6 py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Demander un devis</button></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="pros-tresorerie" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-full hover:bg-slate-200 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour à la trésorerie</a></div>
+</section>
+<div id="ft-pf"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: CONTACT COORDONNEES =============== -->
+<!-- ============================================================ -->
+<div data-page="contact-coordonnees" class="page-section">
+<div id="nav-cc"></div><div id="bc-cc"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Contact</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Nos <span class="text-bank-600">coordonnées</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Contactez-nous par le canal de votre choix.</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center card-hover"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="phone" class="w-5 h-5 text-bank-600"></i></div><h4 class="font-semibold mb-1">Téléphone</h4><p class="text-xl font-semibold text-bank-600 my-2">0 800 123 456</p><p class="text-xs text-slate-400">Appel gratuit — 24h/24</p></div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center card-hover"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="mail" class="w-5 h-5 text-bank-600"></i></div><h4 class="font-semibold mb-1">Email</h4><p class="text-sm font-medium text-bank-600 my-2 break-all">contact@mabanque.fr</p><p class="text-xs text-slate-400">Réponse sous 24h</p></div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center card-hover"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="message-circle" class="w-5 h-5 text-bank-600"></i></div><h4 class="font-semibold mb-1">Chat</h4><p class="text-sm font-medium text-bank-600 my-2">Espace client</p><p class="text-xs text-slate-400">Lun-Ven 8h-20h</p></div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center card-hover"><div class="w-12 h-12 bg-bank-50 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="mail-open" class="w-5 h-5 text-bank-600"></i></div><h4 class="font-semibold mb-1">Courrier</h4><p class="text-sm font-medium text-bank-600 my-2">Service Client</p><p class="text-xs text-slate-400">75001 Paris Cedex 01</p></div>
+    </div>
+    <div class="grid lg:grid-cols-3 gap-8 mb-16">
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><h3 class="text-lg font-semibold mb-6 flex items-center gap-2"><i data-lucide="building-2" class="w-5 h-5 text-bank-600"></i>Siège social</h3><div class="space-y-4 text-sm"><div class="flex gap-3"><i data-lucide="map-pin" class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5"></i><span>15, Boulevard Haussmann<br>75009 Paris, France</span></div><div class="flex gap-3"><i data-lucide="phone" class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5"></i><span>+33 (0)1 42 85 00 00</span></div><div class="flex gap-3"><i data-lucide="mail" class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5"></i><span>siege@mabanque.fr</span></div></div></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><h3 class="text-lg font-semibold mb-6 flex items-center gap-2"><i data-lucide="headphones" class="w-5 h-5 text-bank-600"></i>Service client</h3><div class="space-y-4 text-sm"><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Particuliers</span><p class="text-bank-600 font-semibold mt-1">0 800 123 456</p><p class="text-xs text-slate-400">24h/24 — Appel gratuit</p></div><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Professionnels</span><p class="text-bank-600 font-semibold mt-1">0 800 654 321</p><p class="text-xs text-slate-400">Lun-Ven 8h-19h</p></div><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Urgence carte</span><p class="text-bank-600 font-semibold mt-1">0 892 705 705</p><p class="text-xs text-slate-400">24h/24 — 0,35€/min</p></div></div></div>
+        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200"><h3 class="text-lg font-semibold mb-6 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-bank-600"></i>Informations légales</h3><div class="space-y-4 text-sm"><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">SIREN</span><p class="mt-1">123 456 789</p></div><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">TVA Intracommunautaire</span><p class="mt-1">FR 12 345678901</p></div><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Code APE</span><p class="mt-1">6419Z</p></div><div><span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Agrément ACPR</span><p class="mt-1">CIB 12345</p></div></div></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="contact-agences" class="inline-flex items-center gap-2 px-6 py-3 bg-bank-600 text-white font-medium rounded-full hover:bg-bank-700 transition-all text-sm cursor-pointer">Contacter une agence <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
+</section>
+<div id="ft-cc"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: CONTACT AGENCES ================== -->
+<!-- ============================================================ -->
+<div data-page="contact-agences" class="page-section">
+<div id="nav-ca"></div><div id="bc-ca"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Contact — Agences</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Prenez <span class="text-bank-600">rendez-vous</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Sélectionnez votre agence et prenez rendez-vous avec un conseiller.</p>
+    <div class="grid lg:grid-cols-5 gap-8 mb-16">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200"><h3 class="font-semibold mb-4">Rechercher une agence</h3><div class="space-y-3"><input type="text" placeholder="Code postal ou ville" class="input-focus w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none transition-all"><button class="w-full py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Rechercher</button></div></div>
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200"><h3 class="font-semibold mb-4">Demande de rendez-vous</h3><form class="space-y-3"><input type="text" placeholder="Nom complet" class="input-focus w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none transition-all"><input type="email" placeholder="Email" class="input-focus w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none transition-all"><input type="tel" placeholder="Téléphone" class="input-focus w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none transition-all"><select class="input-focus w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none transition-all text-slate-500"><option>Objet du rendez-vous</option><option>Ouverture de compte</option><option>Demande de crédit</option><option>Assurance</option><option>Patrimoine</option></select><button type="button" onclick="this.nextElementSibling.classList.toggle('hidden');this.disabled=true" class="w-full py-3 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm">Envoyer ma demande</button><div class="hidden bg-bank-50 border border-bank-200 rounded-xl p-4 text-sm text-bank-700 text-center">✓ Votre demande a bien été envoyée.</div></form></div>
+        </div>
+        <div class="lg:col-span-3 space-y-4">
+    <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm" style="height: 280px;">
+        <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9916256937604!2d2.2922926!3d48.8583701!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e66e2964e34e2d%3A0x8ddca9ee380ef7e0!2sTour%20Eiffel!5e0!3m2!1sfr!2sfr!4v1700000000000!5m2!1sfr!2sfr" 
+            width="100%" 
+            height="100%" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
+    <h3 class="font-semibold text-lg">Agences à proximité</h3>
+            <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><div class="flex justify-between items-start"><div><h4 class="font-semibold">Agence Paris Haussmann</h4><p class="text-sm text-slate-500 mt-1">15 Bd Haussmann, 75009 Paris</p><p class="text-xs text-slate-400 mt-1">Lun-Ven 9h-17h | Sam 9h-12h</p></div><span class="text-xs font-medium text-bank-600 bg-bank-50 px-3 py-1 rounded-full">Ouvert</span></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><div class="flex justify-between items-start"><div><h4 class="font-semibold">Agence Paris Opéra</h4><p class="text-sm text-slate-500 mt-1">2 Bd des Capucines, 75009 Paris</p><p class="text-xs text-slate-400 mt-1">Lun-Ven 9h-17h | Sam 9h-12h</p></div><span class="text-xs font-medium text-bank-600 bg-bank-50 px-3 py-1 rounded-full">Ouvert</span></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><div class="flex justify-between items-start"><div><h4 class="font-semibold">Agence Paris Saint-Lazare</h4><p class="text-sm text-slate-500 mt-1">84 Rue de Rome, 75008 Paris</p><p class="text-xs text-slate-400 mt-1">Lun-Ven 9h-17h</p></div><span class="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">Fermé</span></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><div class="flex justify-between items-start"><div><h4 class="font-semibold">Agence Paris République</h4><p class="text-sm text-slate-500 mt-1">45 Av de la République, 75011 Paris</p><p class="text-xs text-slate-400 mt-1">Lun-Ven 9h-17h | Sam 9h-12h</p></div><span class="text-xs font-medium text-bank-600 bg-bank-50 px-3 py-1 rounded-full">Ouvert</span></div></div>
+        </div>
+    </div>
+    <div class="flex justify-center"><a data-nav="contact-coordonnees" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-full hover:bg-slate-200 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour aux coordonnées</a></div>
+</section>
+<div id="ft-ca"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: AGENCES RECHERCHE ================ -->
+<!-- ============================================================ -->
+<div data-page="agences-recherche" class="page-section">
+<div id="nav-ar"></div><div id="bc-ar"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Réseau d'agences</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Trouvez votre <span class="text-bank-600">agence</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-10">1 800 agences en France. Recherchez par ville, code postal ou département.</p>
+    <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-12 flex flex-col sm:flex-row gap-4"><input type="text" id="agence-search-input" placeholder="Ville, code postal ou département" class="input-focus flex-1 px-4 py-3.5 border border-slate-200 rounded-xl text-sm outline-none transition-all"><select id="agence-service-select" class="input-focus px-4 py-3.5 border border-slate-200 rounded-xl text-sm outline-none transition-all text-slate-500"><option>Tous les services</option><option>Comptes & Cartes</option><option>Crédits</option><option>Assurances</option></select><button onclick="searchAgenceMap()" class="px-8 py-3.5 bg-bank-600 text-white font-medium rounded-xl hover:bg-bank-700 transition-all text-sm flex items-center gap-2"><i data-lucide="search" class="w-4 h-4"></i>Rechercher</button></div>
+    <div class="rounded-2xl overflow-hidden border border-slate-200 mb-12 shadow-sm" style="height: 400px;">
+    <iframe 
+        id="agence-map-iframe"
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9916256937604!2d2.2922926!3d48.8583701!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e66e2964e34e2d%3A0x8ddca9ee380ef7e0!2sTour%20Eiffel!5e0!3m2!1sfr!2sfr!4v1700000000000!5m2!1sfr!2sfr" 
+        width="100%" 
+        height="100%" 
+        style="border:0;" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+</div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><h4 class="font-semibold">Paris Haussmann</h4><p class="text-sm text-slate-500 mt-1">15 Bd Haussmann, 75009</p><p class="text-xs text-bank-600 mt-2">📞 01 42 85 00 01</p><div class="flex gap-2 mt-3"><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Particuliers</span><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Pros</span></div></div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><h4 class="font-semibold">Lyon Part-Dieu</h4><p class="text-sm text-slate-500 mt-1">17 Bd Vivier Merle, 69003</p><p class="text-xs text-bank-600 mt-2">📞 04 72 10 00 01</p><div class="flex gap-2 mt-3"><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Particuliers</span><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Patrimoine</span></div></div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><h4 class="font-semibold">Marseille Vieux Port</h4><p class="text-sm text-slate-500 mt-1">3 Quai du Port, 13002</p><p class="text-xs text-bank-600 mt-2">📞 04 91 33 00 01</p><div class="flex gap-2 mt-3"><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Particuliers</span><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Pros</span></div></div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><h4 class="font-semibold">Bordeaux Ste-Catherine</h4><p class="text-sm text-slate-500 mt-1">85 Rue Sainte-Catherine, 33000</p><p class="text-xs text-bank-600 mt-2">📞 05 56 44 00 01</p><div class="flex gap-2 mt-3"><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Particuliers</span></div></div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><h4 class="font-semibold">Toulouse Capitole</h4><p class="text-sm text-slate-500 mt-1">2 Rue du Taur, 31000</p><p class="text-xs text-bank-600 mt-2">📞 05 61 63 00 01</p><div class="flex gap-2 mt-3"><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Particuliers</span><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Crédits</span></div></div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 card-hover"><h4 class="font-semibold">Nantes Commerce</h4><p class="text-sm text-slate-500 mt-1">18 Rue de la Fosse, 44000</p><p class="text-xs text-bank-600 mt-2">📞 02 40 48 00 01</p><div class="flex gap-2 mt-3"><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Particuliers</span><span class="text-xs bg-bank-50 text-bank-700 px-2 py-1 rounded-full">Pros</span></div></div>
+    </div>
+    <div class="flex justify-center"><a data-nav="agences-horaires" class="inline-flex items-center gap-2 px-6 py-3 bg-bank-600 text-white font-medium rounded-full hover:bg-bank-700 transition-all text-sm cursor-pointer">Voir les horaires <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
+</section>
+<div id="ft-ar"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: AGENCES HORAIRES ================= -->
+<!-- ============================================================ -->
+<div data-page="agences-horaires" class="page-section">
+<div id="nav-ah"></div><div id="bc-ah"></div>
+<section class="pb-24 max-w-7xl mx-auto px-6">
+    <span class="inline-block text-xs font-medium text-bank-600 uppercase tracking-widest mb-4">Agences — Horaires</span>
+    <h1 class="text-3xl lg:text-5xl font-semibold tracking-tight mb-4">Horaires <span class="text-bank-600">d'ouverture</span></h1>
+    <p class="text-lg text-slate-500 leading-relaxed max-w-2xl mb-16">Horaires détaillés. Variations possibles pendant les fêtes.</p>
+    <div class="overflow-x-auto mb-16">
+        <table class="w-full border-collapse">
+            <thead><tr class="bg-slate-50"><th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Agence</th><th class="text-center px-4 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Lun</th><th class="text-center px-4 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Mar</th><th class="text-center px-4 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Mer</th><th class="text-center px-4 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Jeu</th><th class="text-center px-4 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Ven</th><th class="text-center px-4 py-4 text-sm font-semibold text-slate-700 border-b border-slate-200">Sam</th></tr></thead>
+            <tbody>
+                <tr class="border-b border-slate-100"><td class="px-6 py-4 text-sm font-medium">Paris Haussmann</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-bank-600 font-medium">9h-12h</td></tr>
+                <tr class="border-b border-slate-100 bg-slate-50/50"><td class="px-6 py-4 text-sm font-medium">Lyon Part-Dieu</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-400">Fermé</td></tr>
+                <tr class="border-b border-slate-100"><td class="px-6 py-4 text-sm font-medium">Marseille Vieux Port</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-16h30</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-16h30</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-16h30</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-16h30</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-16h30</td><td class="px-4 py-4 text-sm text-center text-bank-600 font-medium">9h-12h</td></tr>
+                <tr><td class="px-6 py-4 text-sm font-medium">Toulouse Capitole</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-slate-600">9h-17h</td><td class="px-4 py-4 text-sm text-center text-bank-600 font-medium">9h-12h30</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-12 flex gap-4"><i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"></i><div><h4 class="font-semibold text-amber-800 mb-1">Jours fériés</h4><p class="text-sm text-amber-700">Toutes nos agences sont fermées les jours fériés nationaux : 1er janvier, lundi de Pâques, 1er mai, 8 mai, Ascension, Pentecôte, 14 juillet, 15 août, 1er novembre, 11 novembre, 25 décembre.</p></div></div>
+    <div class="flex justify-center"><a data-nav="agences-recherche" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-full hover:bg-slate-200 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour à la recherche</a></div>
+</section>
+<div id="ft-ah"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ================ DASHBOARD NAV (différent) ================== -->
+<!-- ============================================================ -->
+<template id="tmpl-dash-nav">
+<div class="bg-red-600 text-white py-4 px-6 alert-blink"><div class="max-w-7xl mx-auto flex items-center justify-center gap-3"><i data-lucide="alert-octagon" class="w-6 h-6 flex-shrink-0"></i><p class="text-sm font-bold uppercase tracking-wide">Compte temporairement bloqué, veuillez contacter votre conseiller bancaire</p><i data-lucide="alert-octagon" class="w-6 h-6 flex-shrink-0"></i></div></div>
+<div class="bg-slate-900 text-white py-2 px-6"><div class="max-w-7xl mx-auto flex items-center justify-between text-xs"><div class="flex items-center gap-4"><span class="text-slate-400">Espace client</span><span class="text-slate-600">|</span><span class="text-slate-300">Titulaire : Marie-Christelle Laporte</span><span class="text-slate-600">|</span><span class="text-slate-300">Client n° 98765432</span></div><a onclick="stopInactivityMonitor();navigateTo('home');return false" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"><i data-lucide="log-out" class="w-3 h-3"></i>Déconnexion</a></div></div>
+<nav class="bg-white border-b border-slate-200"><div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between"><a data-nav="home" class="flex items-center gap-2 cursor-pointer"><div class="w-8 h-8 bg-bank-600 rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-4 h-4 text-white"></i></div><span class="font-semibold">MaBanque</span></a><div class="hidden md:flex items-center gap-6"><a data-nav="dashboard" class="text-sm font-medium text-bank-600 cursor-pointer">Tableau de bord</a><a data-nav="historique-2025" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">Historique</a></div><div class="flex items-center gap-3"><button class="p-2 text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="bell" class="w-5 h-5"></i></button><div class="w-8 h-8 bg-bank-100 rounded-full flex items-center justify-center"><span class="text-xs font-semibold text-bank-700">ML</span></div></div></div></nav>
+</template>
+
+<!-- ============================================================ -->
+<!-- =================== PAGE: DASHBOARD ======================== -->
+<!-- ============================================================ -->
+<div data-page="dashboard" class="page-section bg-slate-50">
+<div id="dnav-db"></div>
+<main class="max-w-7xl mx-auto px-6 py-8">
+    <div class="mb-8"><h1 class="text-2xl font-semibold">Bonjour, Marie-Christelle</h1><p class="text-sm text-slate-500 mt-1">Voici un résumé de vos comptes au 15 janvier 2025</p></div>
+    <!-- Alert persistant -->
+    <div class="bg-red-50 border-2 border-red-300 rounded-2xl p-6 mb-8 flex items-start gap-4"><div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0"><i data-lucide="shield-alert" class="w-5 h-5 text-red-600"></i></div><div><h3 class="font-semibold text-red-800">Vos comptes sont actuellement bloqués</h3><p class="text-sm text-red-600 mt-1">Suite à une procédure de sécurité, vos comptes ont été temporairement suspendus. Contactez votre conseiller au <strong>0 642 103 856</strong> ou en agence avec une pièce d'identité.</p></div></div>
+    <!-- Comptes -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200"><div class="flex items-center justify-between mb-4"><span class="text-sm text-slate-500">Compte Courant</span><span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Bloqué</span></div><p class="text-2xl font-semibold">78 852,75 €</p><p class="text-xs text-slate-400 mt-1">IBAN : FR76 •••• •••• 9876 5432</p><div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between"><span class="text-xs text-slate-400">Dernière opération</span><span class="text-xs font-medium text-slate-600">14/01/2025</span></div></div>
+        <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200"><div class="flex items-center justify-between mb-4"><span class="text-sm text-slate-500">Livret A</span><span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Bloqué</span></div><p class="text-2xl font-semibold">26 450,00 €</p><p class="text-xs text-slate-400 mt-1">Rendement : 3,00% annuel</p><div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between"><span class="text-xs text-slate-400">Plafond restant</span><span class="text-xs font-medium text-slate-600">19 550 €</span></div></div>
+        <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200"><div class="flex items-center justify-between mb-4"><span class="text-sm text-slate-500">Compte Épargne Logement</span><span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Bloqué</span></div><p class="text-2xl font-semibold">42 875,50 €</p><p class="text-xs text-slate-400 mt-1">Rendement : 2,00% annuel</p><div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between"><span class="text-xs text-slate-400">Droits à prêt</span><span class="text-xs font-medium text-slate-600">23 000 €</span></div></div>
+        <div class="card-hover bg-amber-50 rounded-2xl p-6 border-2 border-amber-300"><div class="flex items-center justify-between mb-4"><span class="text-sm text-amber-700 font-medium">Coffre Fort</span><span class="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-bold">Verrouillé</span></div><p class="text-2xl font-semibold text-amber-800">100 000,00 €</p><p class="text-xs text-amber-600 mt-1">🔒 Bloqué jusqu'au 01/01/2028</p><div class="mt-4 pt-4 border-t border-amber-200 flex items-center justify-between"><span class="text-xs text-amber-600">Déblocage dans</span><span class="text-xs font-bold text-amber-800">2 ans 11 mois</span></div></div>
+    </div>
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <button disabled class="bg-white border border-slate-200 rounded-xl p-4 text-center opacity-50 cursor-not-allowed"><i data-lucide="send" class="w-5 h-5 mx-auto mb-2 text-slate-400"></i><span class="text-xs font-medium text-slate-500">Virement</span></button>
+        <button disabled class="bg-white border border-slate-200 rounded-xl p-4 text-center opacity-50 cursor-not-allowed"><i data-lucide="receipt" class="w-5 h-5 mx-auto mb-2 text-slate-400"></i><span class="text-xs font-medium text-slate-500">RIB / IBAN</span></button>
+        <button disabled class="bg-white border border-slate-200 rounded-xl p-4 text-center opacity-50 cursor-not-allowed"><i data-lucide="credit-card" class="w-5 h-5 mx-auto mb-2 text-slate-400"></i><span class="text-xs font-medium text-slate-500">Cartes</span></button>
+        <button disabled class="bg-white border border-slate-200 rounded-xl p-4 text-center opacity-50 cursor-not-allowed"><i data-lucide="file-text" class="w-5 h-5 mx-auto mb-2 text-slate-400"></i><span class="text-xs font-medium text-slate-500">Relevés</span></button>
+    </div>
+    <!-- Dernières opérations -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
+        <div class="flex items-center justify-between mb-6"><h3 class="font-semibold">Dernières opérations</h3><a data-nav="historique-2025" class="text-sm font-medium text-bank-600 hover:text-bank-700 transition-colors flex items-center gap-1 cursor-pointer">Voir tout <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between py-3 border-b border-slate-100"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center"><i data-lucide="shopping-cart" class="w-4 h-4 text-red-500"></i></div><div><p class="text-sm font-medium">CARREFOUR MARKET</p><p class="text-xs text-slate-400">Paiement CB • 14/01/2025 • 15:22</p></div></div><span class="text-sm font-semibold text-red-600">-124,53 €</span></div>
+            <div class="flex items-center justify-between py-3 border-b border-slate-100"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-bank-50 rounded-full flex items-center justify-center"><i data-lucide="arrow-down-left" class="w-4 h-4 text-bank-600"></i></div><div><p class="text-sm font-medium">VIREMENT RECU - LAPORTE PIERRE</p><p class="text-xs text-slate-400">Virement SEPA • 10/01/2025</p></div></div><span class="text-sm font-semibold text-bank-600">+5 000,00 €</span></div>
+            <div class="flex items-center justify-between py-3 border-b border-slate-100"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center"><i data-lucide="fuel" class="w-4 h-4 text-red-500"></i></div><div><p class="text-sm font-medium">TOTAL ENERGIES</p><p class="text-xs text-slate-400">Paiement CB • 08/01/2025 • 09:15</p></div></div><span class="text-sm font-semibold text-red-600">-92,40 €</span></div>
+            <div class="flex items-center justify-between py-3"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center"><i data-lucide="arrow-up-right" class="w-4 h-4 text-red-500"></i></div><div><p class="text-sm font-medium">PRÉLÈVEMENT EDF</p><p class="text-xs text-slate-400">Prélèvement • 05/01/2025</p></div></div><span class="text-sm font-semibold text-red-600">-187,60 €</span></div>
+        </div>
+    </div>
+    <div class="text-center"><a data-nav="home" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-200 text-slate-700 font-medium rounded-full hover:bg-slate-300 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour à l'accueil</a></div>
+</main>
+<footer class="bg-slate-950 pt-8 pb-6"><div class="max-w-7xl mx-auto px-6 text-center"><p class="text-xs text-slate-600">© 2026 Ma Banque</p></div></footer>
+</div>
+
+<!-- ============================================================ -->
+<!-- =========== TEMPLATE HISTORIQUE (réutilisable) ============== -->
+<!-- ============================================================ -->
+<template id="tmpl-hist">
+<div id="dnav-hist"></div>
+<main class="max-w-7xl mx-auto px-6 py-8">
+    <a data-nav="dashboard" class="inline-flex items-center gap-2 text-sm font-medium text-bank-600 hover:text-bank-700 transition-colors mb-6 cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour au tableau de bord</a>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div><h1 class="text-2xl font-semibold">Historique des transactions</h1><p class="text-sm text-slate-500 mt-1">Compte Courant — FR76 •••• 4562 91300 — Marie-Christelle Laporte</p></div>
+    </div>
+    <div class="flex gap-2 mb-8" id="hist-tabs"></div>
+    <div id="hist-content"></div>
+    <div class="mt-8 text-center"><a data-nav="dashboard" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-200 text-slate-700 font-medium rounded-full hover:bg-slate-300 transition-all text-sm cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>Retour au tableau de bord</a></div>
+</main>
+<footer class="bg-slate-950 pt-8 pb-6"><div class="max-w-7xl mx-auto px-6 text-center"><p class="text-xs text-slate-600">© 2026 Ma Banque</p></div></footer>
+</template>
+
+<!-- Pages historique (remplies par JS) -->
+<div data-page="historique-2024" class="page-section bg-slate-50"><div id="hist-2024-root"></div></div>
+<div data-page="historique-2025" class="page-section bg-slate-50"><div id="hist-2025-root"></div></div>
+<div data-page="historique-2026" class="page-section bg-slate-50"><div id="hist-2026-root"></div></div>
+
+
+<!-- ============================================================ -->
+<!-- ======================== JAVASCRIPT ======================== -->
+<!-- ============================================================ -->
+<script>
+// ===== DONNÉES DE NAVIGATION =====
+const NAV_CONFIG = {
+    'home':                  { label:'Accueil',           parent:null, backTo:null,               backLabel:null, section:'Accueil' },
+    'offres-banque':         { label:'Offres bancaires',   parent:'home', backTo:'home',          backLabel:"Retour à l'accueil", section:'Nos offres' },
+    'offres-assurance':      { label:'Assurances',        parent:'offres-banque', backTo:'offres-banque', backLabel:"Retour aux offres bancaires", section:'Assurances' },
+    'particuliers-comptes':  { label:'Comptes',           parent:'home', backTo:'home',          backLabel:"Retour à l'accueil", section:'Particuliers' },
+    'particuliers-credits':  { label:'Crédits',           parent:'particuliers-comptes', backTo:'particuliers-comptes', backLabel:"Retour aux comptes", section:'Crédits' },
+    'pros-tresorerie':       { label:'Trésorerie',        parent:'home', backTo:'home',          backLabel:"Retour à l'accueil", section:'Professionnels' },
+    'pros-financement':      { label:'Financement',       parent:'pros-tresorerie', backTo:'pros-tresorerie', backLabel:"Retour à la trésorerie", section:'Financement' },
+    'contact-coordonnees':   { label:'Coordonnées',       parent:'home', backTo:'home',          backLabel:"Retour à l'accueil", section:'Contact' },
+    'contact-agences':       { label:'Contacter agence',  parent:'contact-coordonnees', backTo:'contact-coordonnees', backLabel:"Retour aux coordonnées", section:'Agences' },
+    'agences-recherche':     { label:'Recherche',         parent:'home', backTo:'home',          backLabel:"Retour à l'accueil", section:'Agences' },
+    'agences-horaires':      { label:'Horaires',          parent:'agences-recherche', backTo:'agences-recherche', backLabel:"Retour à la recherche", section:'Horaires' },
+    'dashboard':             { label:'Tableau de bord',   parent:null, backTo:'home',          backLabel:null, section:null },
+    'historique-2024':       { label:'Historique 2024',   parent:null, backTo:'dashboard',      backLabel:null, section:null },
+    'historique-2025':       { label:'Historique 2025',   parent:null, backTo:'dashboard',      backLabel:null, section:null },
+    'historique-2026':       { label:'Historique 2026',   parent:null, backTo:'dashboard',      backLabel:null, section:null },
+};
+
+const NAV_LINKS = ['offres-banque','particuliers-comptes','pros-tresorerie','contact-coordonnees','agences-recherche'];
+const NAV_LABELS = {'offres-banque':'Nos offres','particuliers-comptes':'Particuliers','pros-tresorerie':'Professionnels','contact-coordonnees':'Contact','agences-recherche':'Agences'};
+
+let currentPage = 'home';
+
+// ===== DONNÉES HISTORIQUE =====
+const TX_DATA = {
+    2024: [
+        {m:'Janvier 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE JAN',d:'Virement SEPA • 25/01/2024',a:5074,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 11/01/2024 • 18:43',a:-80,c:'banknote',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 16/01/2024',a:-9.99,c:'music',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 15/01/2024',a:-188,c:'zap',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 11/01/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'LOYER JANVIER 2024',d:'Prélèvement • 01/01/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 25/01/2024 • 14:37',a:-119,c:'shopping-cart',r:1},
+            {t:'ZALANDO.FR',d:'Paiement CB • 24/01/2024 • 17:17',a:-110,c:'shopping-bag',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 22/01/2024 • 7:45',a:-92,c:'fuel',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 15/01/2024 • 21:59',a:-44,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 12/01/2024 • 8:37',a:-92,c:'fuel',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 05/01/2024 • 16:22',a:-52,c:'shopping-cart',r:1}
+        ]},
+        {m:'Février 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE FÉV',d:'Virement SEPA • 25/02/2024',a:4857,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 16/02/2024 • 19:46',a:-100,c:'banknote',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 13/02/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 13/02/2024',a:-9.99,c:'music',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 08/02/2024',a:-76,c:'shield',r:1},
+            {t:'LOYER FÉVRIER 2024',d:'Prélèvement • 01/02/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 24/02/2024 • 9:32',a:-69,c:'shopping-cart',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 21/02/2024 • 15:51',a:-48,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 16/02/2024 • 13:19',a:-82,c:'fuel',r:1},
+            {t:'ZALANDO.FR',d:'Paiement CB • 13/02/2024 • 15:41',a:-97,c:'shopping-bag',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 11/02/2024 • 16:38',a:-68,c:'fuel',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 08/02/2024 • 9:57',a:-35,c:'shopping-cart',r:1}
+        ]},
+        {m:'Mars 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE MAR',d:'Virement SEPA • 25/03/2024',a:4816,c:'arrow-down-left',r:0},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 15/03/2024',a:-9.99,c:'music',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 12/03/2024',a:-9.99,c:'car',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 12/03/2024',a:-13.49,c:'film',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 11/03/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'LOYER MARS 2024',d:'Prélèvement • 01/03/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 24/03/2024 • 8:15',a:-106,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 13/03/2024 • 10:48',a:-73,c:'fuel',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 07/03/2024 • 11:20',a:-93,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 06/03/2024 • 15:20',a:-126,c:'shopping-cart',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 05/03/2024 • 11:38',a:-38,c:'shopping-cart',r:1}
+        ]},
+        {m:'Avril 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE AVR',d:'Virement SEPA • 25/04/2024',a:4824,c:'arrow-down-left',r:0},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 12/04/2024',a:-9.99,c:'music',r:1},
+            {t:'LOYER AVRIL 2024',d:'Prélèvement • 01/04/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 25/04/2024 • 21:28',a:-118,c:'shopping-cart',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 22/04/2024 • 14:12',a:-93,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 20/04/2024 • 11:23',a:-73,c:'fuel',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 12/04/2024 • 19:43',a:-73,c:'fuel',r:1}
+        ]},
+        {m:'Mai 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE MAI',d:'Virement SEPA • 25/05/2024',a:4819,c:'arrow-down-left',r:0},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 15/05/2024',a:-207,c:'zap',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 14/05/2024',a:-74,c:'shield',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 13/05/2024',a:-9.99,c:'music',r:1},
+            {t:'LOYER MAI 2024',d:'Prélèvement • 01/05/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 22/05/2024 • 9:35',a:-134,c:'shopping-cart',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 18/05/2024 • 15:25',a:-90,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 13/05/2024 • 18:46',a:-134,c:'shopping-cart',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 12/05/2024 • 17:35',a:-132,c:'shopping-bag',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 05/05/2024 • 9:29',a:-65,c:'fuel',r:1}
+        ]},
+        {m:'Juin 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE JUI',d:'Virement SEPA • 25/06/2024',a:4915,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 13/06/2024 • 19:59',a:-150,c:'banknote',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 19/06/2024',a:-9.99,c:'car',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 05/06/2024',a:-143,c:'zap',r:1},
+            {t:'LOYER JUIN 2024',d:'Prélèvement • 01/06/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 25/06/2024 • 10:59',a:-42,c:'shopping-cart',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 21/06/2024 • 9:19',a:-30,c:'shopping-cart',r:1},
+            {t:'FNAC.COM',d:'Paiement CB • 20/06/2024 • 16:15',a:-92,c:'shopping-bag',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 13/06/2024 • 13:21',a:-85,c:'fuel',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 11/06/2024 • 17:57',a:-65,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 03/06/2024 • 16:13',a:-96,c:'shopping-cart',r:1}
+        ]},
+        {m:'Juillet 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE JUI',d:'Virement SEPA • 25/07/2024',a:4905,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 18/07/2024 • 8:53',a:-50,c:'banknote',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 11/07/2024',a:-13.49,c:'film',r:1},
+            {t:'LOYER JUILLET 2024',d:'Prélèvement • 01/07/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 27/07/2024 • 14:57',a:-34,c:'shopping-cart',r:1},
+            {t:'FNAC.COM',d:'Paiement CB • 19/07/2024 • 21:21',a:-143,c:'shopping-bag',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 13/07/2024 • 10:15',a:-87,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 10/07/2024 • 14:18',a:-88,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 06/07/2024 • 22:14',a:-89,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 06/07/2024 • 16:40',a:-88,c:'fuel',r:1}
+        ]},
+        {m:'Août 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE AOÛ',d:'Virement SEPA • 25/08/2024',a:5068,c:'arrow-down-left',r:0},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 11/08/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 09/08/2024',a:-72,c:'shield',r:1},
+            {t:'LOYER AOÛT 2024',d:'Prélèvement • 01/08/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 21/08/2024 • 14:52',a:-70,c:'fuel',r:1},
+            {t:'ZALANDO.FR',d:'Paiement CB • 15/08/2024 • 18:10',a:-109,c:'shopping-bag',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 14/08/2024 • 7:52',a:-70,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 13/08/2024 • 14:45',a:-139,c:'shopping-cart',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 12/08/2024 • 11:59',a:-80,c:'shopping-cart',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 06/08/2024 • 18:29',a:-67,c:'shopping-cart',r:1}
+        ]},
+        {m:'Septembre 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE SEP',d:'Virement SEPA • 25/09/2024',a:4909,c:'arrow-down-left',r:0},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 18/09/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 15/09/2024',a:-9.99,c:'car',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 14/09/2024',a:-9.99,c:'music',r:1},
+            {t:'LOYER SEPTEMBRE 2024',d:'Prélèvement • 01/09/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 26/09/2024 • 15:30',a:-30,c:'shopping-cart',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 23/09/2024 • 20:22',a:-56,c:'fuel',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 19/09/2024 • 13:32',a:-91,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 07/09/2024 • 16:19',a:-69,c:'fuel',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 03/09/2024 • 18:26',a:-133,c:'shopping-cart',r:1}
+        ]},
+        {m:'Octobre 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE OCT',d:'Virement SEPA • 25/10/2024',a:5049,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 07/10/2024',a:1920,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 05/10/2024 • 16:16',a:-200,c:'banknote',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 18/10/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 15/10/2024',a:-9.99,c:'music',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 10/10/2024',a:-179,c:'zap',r:1},
+            {t:'LOYER OCTOBRE 2024',d:'Prélèvement • 01/10/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'FNAC.COM',d:'Paiement CB • 23/10/2024 • 18:22',a:-182,c:'shopping-bag',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 21/10/2024 • 19:23',a:-71,c:'shopping-cart',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 19/10/2024 • 17:27',a:-81,c:'fuel',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 08/10/2024 • 9:29',a:-61,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 03/10/2024 • 8:44',a:-55,c:'shopping-cart',r:1}
+        ]},
+        {m:'Novembre 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE NOV',d:'Virement SEPA • 25/11/2024',a:4932,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 05/11/2024',a:4600,c:'arrow-down-left',r:0},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 14/11/2024',a:-9.99,c:'music',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 08/11/2024',a:-83,c:'shield',r:1},
+            {t:'LOYER NOVEMBRE 2024',d:'Prélèvement • 01/11/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 20/11/2024 • 12:20',a:-80,c:'fuel',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 20/11/2024 • 10:21',a:-107,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 18/11/2024 • 9:50',a:-75,c:'fuel',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 18/11/2024 • 13:25',a:-67,c:'shopping-cart',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 16/11/2024 • 22:30',a:-57,c:'shopping-cart',r:1}
+        ]},
+        {m:'Décembre 2024', tx:[
+            {t:'VIREMENT RECU - SALAIRE DÉC',d:'Virement SEPA • 25/12/2024',a:4964,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 12/12/2024',a:3692,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 08/12/2024 • 12:27',a:-150,c:'banknote',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 14/12/2024',a:-49.99,c:'smartphone',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 14/12/2024',a:-9.99,c:'music',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 13/12/2024',a:-13.49,c:'film',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 11/12/2024',a:-210,c:'zap',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 10/12/2024',a:-9.99,c:'car',r:1},
+            {t:'LOYER DÉCEMBRE 2024',d:'Prélèvement • 01/12/2024',a:-1450,c:'arrow-up-right',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 22/12/2024 • 19:48',a:-65,c:'fuel',r:1},
+            {t:'ZALANDO.FR',d:'Paiement CB • 18/12/2024 • 22:29',a:-109,c:'shopping-bag',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 18/12/2024 • 11:16',a:-65,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 10/12/2024 • 10:24',a:-76,c:'shopping-cart',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 05/12/2024 • 21:13',a:-39,c:'shopping-cart',r:1}
+        ]}
+    ],
+    2025: [
+        {m:'Janvier 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE JAN',d:'Virement SEPA • 25/01/2025',a:5097,c:'arrow-down-left',r:0},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 14/01/2025',a:-9.99,c:'music',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 14/01/2025',a:-13.49,c:'film',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 11/01/2025',a:-182,c:'zap',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 10/01/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'LOYER JANVIER 2025',d:'Prélèvement • 01/01/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 25/01/2025 • 12:13',a:-92,c:'fuel',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 20/01/2025 • 12:39',a:-92,c:'fuel',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 19/01/2025 • 9:16',a:-61,c:'shopping-cart',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 17/01/2025 • 8:34',a:-63,c:'shopping-cart',r:1},
+            {t:'FNAC.COM',d:'Paiement CB • 17/01/2025 • 17:32',a:-54,c:'shopping-bag',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 03/01/2025 • 12:15',a:-61,c:'shopping-cart',r:1}
+        ]},
+        {m:'Février 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE FÉV',d:'Virement SEPA • 25/02/2025',a:4966,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 11/02/2025 • 9:33',a:-80,c:'banknote',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 15/02/2025',a:-156,c:'zap',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 15/02/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 14/02/2025',a:-81,c:'shield',r:1},
+            {t:'LOYER FÉVRIER 2025',d:'Prélèvement • 01/02/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 24/02/2025 • 14:39',a:-102,c:'shopping-cart',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 22/02/2025 • 17:28',a:-104,c:'shopping-cart',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 16/02/2025 • 18:39',a:-32,c:'shopping-bag',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 10/02/2025 • 17:36',a:-89,c:'fuel',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 06/02/2025 • 7:11',a:-89,c:'fuel',r:1}
+        ]},
+        {m:'Mars 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE MAR',d:'Virement SEPA • 25/03/2025',a:5044,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 22/03/2025 • 8:26',a:-40,c:'banknote',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 16/03/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 16/03/2025',a:-9.99,c:'music',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 10/03/2025',a:-9.99,c:'car',r:1},
+            {t:'LOYER MARS 2025',d:'Prélèvement • 01/03/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 22/03/2025 • 20:42',a:-63,c:'shopping-cart',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 16/03/2025 • 13:17',a:-127,c:'shopping-bag',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 16/03/2025 • 10:12',a:-77,c:'fuel',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 11/03/2025 • 20:41',a:-79,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 11/03/2025 • 15:41',a:-128,c:'shopping-cart',r:1}
+        ]},
+        {m:'Avril 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE AVR',d:'Virement SEPA • 25/04/2025',a:5010,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 23/04/2025 • 19:37',a:-100,c:'banknote',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 13/04/2025',a:-13.49,c:'film',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 07/04/2025',a:-196,c:'zap',r:1},
+            {t:'LOYER AVRIL 2025',d:'Prélèvement • 01/04/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 23/04/2025 • 7:43',a:-81,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 22/04/2025 • 17:46',a:-95,c:'shopping-cart',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 19/04/2025 • 18:34',a:-87,c:'shopping-cart',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 18/04/2025 • 16:17',a:-175,c:'shopping-bag',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 06/04/2025 • 8:41',a:-54,c:'fuel',r:1}
+        ]},
+        {m:'Mai 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE MAI',d:'Virement SEPA • 25/05/2025',a:4832,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 08/05/2025',a:533,c:'arrow-down-left',r:0},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 12/05/2025',a:-168,c:'zap',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 08/05/2025',a:-85,c:'shield',r:1},
+            {t:'LOYER MAI 2025',d:'Prélèvement • 01/05/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 25/05/2025 • 13:54',a:-27,c:'shopping-cart',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 24/05/2025 • 21:57',a:-27,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 24/05/2025 • 15:47',a:-67,c:'fuel',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 08/05/2025 • 8:51',a:-72,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 03/05/2025 • 16:30',a:-104,c:'shopping-cart',r:1}
+        ]},
+        {m:'Juin 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE JUI',d:'Virement SEPA • 25/06/2025',a:4890,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 05/06/2025',a:2919,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 23/06/2025 • 18:11',a:-50,c:'banknote',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 19/06/2025',a:-9.99,c:'car',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 15/06/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 13/06/2025',a:-9.99,c:'music',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 11/06/2025',a:-13.49,c:'film',r:1},
+            {t:'LOYER JUIN 2025',d:'Prélèvement • 01/06/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 18/06/2025 • 22:35',a:-109,c:'shopping-cart',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 13/06/2025 • 19:49',a:-109,c:'shopping-cart',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 10/06/2025 • 10:15',a:-109,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 09/06/2025 • 16:38',a:-62,c:'fuel',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 06/06/2025 • 11:14',a:-83,c:'fuel',r:1}
+        ]},
+        {m:'Juillet 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE JUI',d:'Virement SEPA • 25/07/2025',a:4826,c:'arrow-down-left',r:0},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 17/07/2025',a:-9.99,c:'music',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 17/07/2025',a:-13.49,c:'film',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 13/07/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'LOYER JUILLET 2025',d:'Prélèvement • 01/07/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 23/07/2025 • 20:36',a:-89,c:'fuel',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 16/07/2025 • 15:56',a:-113,c:'shopping-bag',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 12/07/2025 • 9:47',a:-66,c:'shopping-cart',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 06/07/2025 • 17:54',a:-51,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 06/07/2025 • 12:40',a:-82,c:'fuel',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 02/07/2025 • 9:26',a:-51,c:'shopping-cart',r:1}
+        ]},
+        {m:'Août 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE AOÛ',d:'Virement SEPA • 25/08/2025',a:5051,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 16/08/2025',a:599,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 09/08/2025 • 14:45',a:-50,c:'banknote',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 13/08/2025',a:-9.99,c:'music',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 10/08/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 08/08/2025',a:-72,c:'shield',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 07/08/2025',a:-174,c:'zap',r:1},
+            {t:'LOYER AOÛT 2025',d:'Prélèvement • 01/08/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 21/08/2025 • 12:16',a:-137,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 20/08/2025 • 20:17',a:-100,c:'fuel',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 14/08/2025 • 20:21',a:-91,c:'shopping-cart',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 10/08/2025 • 19:23',a:-67,c:'fuel',r:1}
+        ]},
+        {m:'Septembre 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE SEP',d:'Virement SEPA • 25/09/2025',a:4872,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 05/09/2025 • 9:59',a:-40,c:'banknote',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 15/09/2025',a:-9.99,c:'music',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 15/09/2025',a:-13.49,c:'film',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 14/09/2025',a:-49.99,c:'smartphone',r:1},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 10/09/2025',a:-9.99,c:'car',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 06/09/2025',a:-175,c:'zap',r:1},
+            {t:'LOYER SEPTEMBRE 2025',d:'Prélèvement • 01/09/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 20/09/2025 • 15:18',a:-87,c:'fuel',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 19/09/2025 • 9:48',a:-67,c:'shopping-cart',r:1},
+            {t:'FNAC.COM',d:'Paiement CB • 19/09/2025 • 17:47',a:-34,c:'shopping-bag',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 16/09/2025 • 8:36',a:-46,c:'shopping-cart',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 06/09/2025 • 19:17',a:-87,c:'fuel',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 03/09/2025 • 14:35',a:-46,c:'shopping-cart',r:1}
+        ]},
+        {m:'Octobre 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE OCT',d:'Virement SEPA • 25/10/2025',a:5009,c:'arrow-down-left',r:0},
+            {t:'NETFLIX',d:'Prélèvement • 15/10/2025',a:-13.49,c:'film',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 14/10/2025',a:-9.99,c:'music',r:1},
+            {t:'LOYER OCTOBRE 2025',d:'Prélèvement • 01/10/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 25/10/2025 • 14:48',a:-62,c:'fuel',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 21/10/2025 • 19:21',a:-62,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 21/10/2025 • 16:15',a:-58,c:'shopping-cart',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 18/10/2025 • 14:13',a:-118,c:'shopping-bag',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 09/10/2025 • 10:28',a:-77,c:'shopping-cart',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 02/10/2025 • 15:37',a:-53,c:'shopping-cart',r:1}
+        ]},
+        {m:'Novembre 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE NOV',d:'Virement SEPA • 25/11/2025',a:5012,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 18/11/2025',a:1219,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 10/11/2025 • 15:18',a:-100,c:'banknote',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 15/11/2025',a:-71,c:'shield',r:1},
+            {t:'LOYER NOVEMBRE 2025',d:'Prélèvement • 01/11/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 20/11/2025 • 13:12',a:-67,c:'shopping-cart',r:1},
+            {t:'AMAZON.FR',d:'Paiement CB • 19/11/2025 • 11:30',a:-47,c:'shopping-bag',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 07/11/2025 • 20:25',a:-57,c:'fuel',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 07/11/2025 • 20:17',a:-55,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 06/11/2025 • 19:47',a:-81,c:'fuel',r:1},
+            {t:'CARREFOUR MARKET',d:'Paiement CB • 05/11/2025 • 16:16',a:-58,c:'shopping-cart',r:1}
+        ]},
+        {m:'Décembre 2025', tx:[
+            {t:'VIREMENT RECU - SALAIRE DÉC',d:'Virement SEPA • 25/12/2025',a:4907,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 19/12/2025',a:2790,c:'arrow-down-left',r:0},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 19/12/2025',a:-9.99,c:'car',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 18/12/2025',a:-9.99,c:'music',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 15/12/2025',a:-151,c:'zap',r:1},
+            {t:'NETFLIX',d:'Prélèvement • 11/12/2025',a:-13.49,c:'film',r:1},
+            {t:'LOYER DÉCEMBRE 2025',d:'Prélèvement • 01/12/2025',a:-1450,c:'arrow-up-right',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 24/12/2025 • 18:36',a:-32,c:'shopping-cart',r:1},
+            {t:'AMAZON.FR',d:'Paiement CB • 19/12/2025 • 12:20',a:-162,c:'shopping-bag',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 18/12/2025 • 10:44',a:-76,c:'shopping-cart',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 15/12/2025 • 18:54',a:-75,c:'fuel',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 10/12/2025 • 17:23',a:-94,c:'fuel',r:1}
+        ]}
+    ],
+    2026: [
+        {m:'Janvier 2026', tx:[
+            {t:'VIREMENT RECU - SALAIRE JAN',d:'Virement SEPA • 25/01/2026',a:4806,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 20/01/2026',a:1010,c:'arrow-down-left',r:0},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 13/01/2026',a:-49.99,c:'smartphone',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 12/01/2026',a:-146,c:'zap',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 12/01/2026',a:-9.99,c:'music',r:1},
+            {t:'LOYER JANVIER 2026',d:'Prélèvement • 01/01/2026',a:-1480,c:'arrow-up-right',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 27/01/2026 • 12:59',a:-77,c:'shopping-cart',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 25/01/2026 • 17:59',a:-92,c:'shopping-bag',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 22/01/2026 • 14:54',a:-54,c:'shopping-cart',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 21/01/2026 • 11:34',a:-79,c:'fuel',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 14/01/2026 • 14:39',a:-73,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 06/01/2026 • 19:54',a:-59,c:'shopping-cart',r:1}
+        ]},
+        {m:'Février 2026', tx:[
+            {t:'VIREMENT RECU - SALAIRE FÉV',d:'Virement SEPA • 25/02/2026',a:4981,c:'arrow-down-left',r:0},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 15/02/2026',a:-78,c:'shield',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 13/02/2026',a:-9.99,c:'music',r:1},
+            {t:'LOYER FÉVRIER 2026',d:'Prélèvement • 01/02/2026',a:-1480,c:'arrow-up-right',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 26/02/2026 • 19:32',a:-43,c:'shopping-cart',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 21/02/2026 • 22:22',a:-43,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 21/02/2026 • 16:38',a:-81,c:'fuel',r:1},
+            {t:'AMAZON.FR',d:'Paiement CB • 18/02/2026 • 13:54',a:-203,c:'shopping-bag',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 08/02/2026 • 8:34',a:-70,c:'shopping-cart',r:1},
+            {t:'SHELL FRANCE',d:'Paiement CB • 07/02/2026 • 20:42',a:-84,c:'fuel',r:1}
+        ]},
+        {m:'Mars 2026', tx:[
+            {t:'VIREMENT RECU - SALAIRE MAR',d:'Virement SEPA • 25/03/2026',a:5026,c:'arrow-down-left',r:0},
+            {t:'ASSURANCE AUTO',d:'Prélèvement • 19/03/2026',a:-9.99,c:'car',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 15/03/2026',a:-9.99,c:'music',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 08/03/2026',a:-161,c:'zap',r:1},
+            {t:'LOYER MARS 2026',d:'Prélèvement • 01/03/2026',a:-1480,c:'arrow-up-right',r:1},
+            {t:'LECLERC DRIVE',d:'Paiement CB • 24/03/2026 • 11:56',a:-99,c:'shopping-cart',r:1},
+            {t:'INTERMARCHÉ PROXIMITÉ',d:'Paiement CB • 22/03/2026 • 13:20',a:-44,c:'shopping-cart',r:1},
+            {t:'AMAZON.FR',d:'Paiement CB • 20/03/2026 • 12:54',a:-113,c:'shopping-bag',r:1},
+            {t:'FRANPRIX',d:'Paiement CB • 18/03/2026 • 22:10',a:-68,c:'shopping-cart',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 11/03/2026 • 14:30',a:-65,c:'fuel',r:1},
+            {t:'ESSO EXPRESS',d:'Paiement CB • 10/03/2026 • 14:20',a:-65,c:'fuel',r:1}
+        ]},
+        {m:'Avril 2026', tx:[
+            {t:'VIREMENT RECU - SALAIRE AVR',d:'Virement SEPA • 25/04/2026',a:4839,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 15/04/2026',a:4401,c:'arrow-down-left',r:0},
+            {t:'NETFLIX',d:'Prélèvement • 14/04/2026',a:-13.49,c:'film',r:1},
+            {t:'ORANGE TÉLÉCOM',d:'Prélèvement • 11/04/2026',a:-49.99,c:'smartphone',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 06/04/2026',a:-153,c:'zap',r:1},
+            {t:'LOYER AVRIL 2026',d:'Prélèvement • 01/04/2026',a:-1480,c:'arrow-up-right',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 27/04/2026 • 16:13',a:-87,c:'fuel',r:1},
+            {t:'LIDL FRANCE',d:'Paiement CB • 20/04/2026 • 12:30',a:-38,c:'shopping-cart',r:1},
+            {t:'MONOPRIX PARIS',d:'Paiement CB • 13/04/2026 • 10:31',a:-76,c:'shopping-cart',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 07/04/2026 • 9:48',a:-82,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 06/04/2026 • 20:59',a:-82,c:'fuel',r:1}
+        ]},
+        {m:'Mai 2026', tx:[
+            {t:'VIREMENT RECU - SALAIRE MAI',d:'Virement SEPA • 25/05/2026',a:4904,c:'arrow-down-left',r:0},
+            {t:'VIREMENT RECU - LAPORTE PIERRE',d:'Virement SEPA • 16/05/2026',a:724,c:'arrow-down-left',r:0},
+            {t:'RETRAIT DAB',d:'Retrait • 24/05/2026 • 15:35',a:-100,c:'banknote',r:1},
+            {t:'SPOTIFY ABONNEMENT',d:'Prélèvement • 14/05/2026',a:-9.99,c:'music',r:1},
+            {t:'EDF ÉLECTRICITÉ',d:'Prélèvement • 10/05/2026',a:-194,c:'zap',r:1},
+            {t:'ASSURANCE HABITATION',d:'Prélèvement • 10/05/2026',a:-71,c:'shield',r:1},
+            {t:'LOYER MAI 2026',d:'Prélèvement • 01/05/2026',a:-1480,c:'arrow-up-right',r:1},
+            {t:'BP STATION SERVICE',d:'Paiement CB • 25/05/2026 • 10:18',a:-73,c:'fuel',r:1},
+            {t:'CDISCOUNT',d:'Paiement CB • 20/05/2026 • 11:10',a:-139,c:'shopping-bag',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 17/05/2026 • 8:14',a:-60,c:'shopping-cart',r:1},
+            {t:'TOTAL ENERGIES',d:'Paiement CB • 09/05/2026 • 14:29',a:-89,c:'fuel',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 08/05/2026 • 20:19',a:-60,c:'shopping-cart',r:1},
+            {t:'AUCHAN SUPERMARCHÉ',d:'Paiement CB • 07/05/2026 • 22:39',a:-60,c:'shopping-cart',r:1}
+        ]}
+    ]
+};
+
+// ===== FONCTIONS =====
+function navigateTo(page) {
+    const protectedPages = ['dashboard','historique-2024','historique-2025','historique-2026'];
+    if(protectedPages.includes(page) && !document.getElementById('login-modal').classList.contains('hidden')){showToast('Veuillez vous connecter pour accéder à cette page.','warning');return}
+    document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector(`[data-page="${page}"]`);
+    if (target) { target.classList.add('active'); }
+    currentPage = page;
+    window.scrollTo(0, 0);
+    lucide.createIcons();
+    if(!protectedPages.includes(page)){stopInactivityMonitor()}
+}
+
+function buildInnerNav(containerId, activeKey) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = NAV_LINKS.map(k =>
+        `<a data-nav="${k}" class="text-sm font-medium ${k===activeKey?'text-bank-600':'text-slate-600 hover:text-slate-900'} transition-colors cursor-pointer">${NAV_LABELS[k]}</a>`
+    ).join('');
+}
+
+function buildBreadcrumb(containerId, config) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (!config.parent || !config.section) { container.innerHTML = ''; return; }
+    let path = `<span class="text-slate-400"><a data-nav="home" class="hover:text-slate-600 cursor-pointer">Accueil</a></span>`;
+    if (config.parent !== 'home') {
+        const parentCfg = NAV_CONFIG[config.parent];
+        path += `<i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i><span class="text-slate-400"><a data-nav="${config.parent}" class="hover:text-slate-600 cursor-pointer">${parentCfg.section}</a></span>`;
+    }
+    path += `<i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i><span class="text-slate-600">${config.label}</span>`;
+
+    container.innerHTML = `
+        <a data-nav="${config.backTo}" class="inline-flex items-center gap-2 text-sm font-medium text-bank-600 hover:text-bank-700 transition-colors mb-6 cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i>${config.backLabel}</a>
+        <div class="flex items-center gap-3 text-sm">${path}</div>
+    `;
+}
+
+function buildHistPage(year) {
+    const root = document.getElementById(`hist-${year}-root`);
+    if (!root) return;
+    const tmpl = document.getElementById('tmpl-hist');
+    root.innerHTML = '';
+    const clone = tmpl.content.cloneNode(true);
+    root.appendChild(clone);
+
+    // Dash nav
+    const dnav = root.querySelector('#dnav-hist');
+    const dnavTmpl = document.getElementById('tmpl-dash-nav');
+    if (dnav && dnavTmpl) { dnav.innerHTML = ''; dnav.appendChild(dnavTmpl.content.cloneNode(true)); }
+
+    // Tabs
+    const tabsEl = root.querySelector('#hist-tabs');
+    [2024,2025,2026].forEach(y => {
+        const active = y === year;
+        tabsEl.innerHTML += `<a data-nav="historique-${y}" class="px-5 py-2.5 ${active?'bg-bank-600 text-white':'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'} text-sm font-medium rounded-full cursor-pointer transition-colors">${y}</a>`;
+    });
+
+    // Content
+    const contentEl = root.querySelector('#hist-content');
+    const months = TX_DATA[year] || [];
+    months.forEach(month => {
+        let rows = month.tx.map(tx => `
+            <div class="px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 ${tx.r?'bg-red-50':'bg-bank-50'} rounded-full flex items-center justify-center">
+                        <i data-lucide="${tx.c}" class="w-4 h-4 ${tx.r?'text-red-500':'text-bank-600'}"></i>
+                    </div>
+                    <div><p class="text-sm font-medium">${tx.t}</p><p class="text-xs text-slate-400">${tx.d}</p></div>
+                </div>
+                <span class="text-sm font-semibold ${tx.r?'text-red-600':'text-bank-600'}">${tx.r?'':'+'}${tx.a.toFixed(2).replace('.',',')} €</span>
+            </div>
+        `).join('');
+
+        contentEl.innerHTML += `
+            <div class="bg-white rounded-2xl border border-slate-200 mb-6">
+                <div class="px-6 py-4 border-b border-slate-100"><h3 class="font-semibold text-sm">${month.m}</h3></div>
+                <div class="divide-y divide-slate-100">${rows}</div>
+            </div>
+        `;
+    });
+}
+
+// ===== INITIALISATION =====
+function initSite() {
+    // Build inner pages nav/bc/footer
+    const innerPages = {
+        'offres-banque':       {nav:'nav-ob', bc:'bc-ob', ft:'ft-ob', active:'offres-banque'},
+        'offres-assurance':    {nav:'nav-oa', bc:'bc-oa', ft:'ft-oa', active:'offres-banque'},
+        'particuliers-comptes':{nav:'nav-pc', bc:'bc-pc', ft:'ft-pc', active:'particuliers-comptes'},
+        'particuliers-credits':{nav:'nav-pcr',bc:'bc-pcr',ft:'ft-pcr',active:'particuliers-comptes'},
+        'pros-tresorerie':     {nav:'nav-pt', bc:'bc-pt', ft:'ft-pt', active:'pros-tresorerie'},
+        'pros-financement':    {nav:'nav-pf', bc:'bc-pf', ft:'ft-pf', active:'pros-tresorerie'},
+        'contact-coordonnees': {nav:'nav-cc', bc:'bc-cc', ft:'ft-cc', active:'contact-coordonnees'},
+        'contact-agences':     {nav:'nav-ca', bc:'bc-ca', ft:'ft-ca', active:'contact-coordonnees'},
+        'agences-recherche':   {nav:'nav-ar', bc:'bc-ar', ft:'ft-ar', active:'agences-recherche'},
+        'agences-horaires':    {nav:'nav-ah', bc:'bc-ah', ft:'ft-ah', active:'agences-recherche'},
+    };
+
+    const navTmpl = document.getElementById('tmpl-nav');
+    const bcTmpl = document.getElementById('tmpl-breadcrumb');
+    const ftTmpl = document.getElementById('tmpl-footer');
+    const dashNavTmpl = document.getElementById('tmpl-dash-nav');
+
+    Object.keys(innerPages).forEach(page => {
+        const cfg = innerPages[page];
+        const pageCfg = NAV_CONFIG[page];
+
+        // Nav
+        const navEl = document.getElementById(cfg.nav);
+        if (navEl && navTmpl) { navEl.innerHTML = ''; navEl.appendChild(navTmpl.content.cloneNode(true)); buildInnerNav(cfg.nav.replace('nav-','inner-'), cfg.active); }
+        // Breadcrumb
+        buildBreadcrumb(cfg.bc, pageCfg);
+        // Footer
+        const ftEl = document.getElementById(cfg.ft);
+        if (ftEl && ftTmpl) { ftEl.innerHTML = ''; ftEl.appendChild(ftTmpl.content.cloneNode(true)); }
+    });
+
+    // Dashboard nav
+    const dbDnav = document.getElementById('dnav-db');
+    if (dbDnav && dashNavTmpl) { dbDnav.innerHTML = ''; dbDnav.appendChild(dashNavTmpl.content.cloneNode(true)); }
+
+    // Build history pages
+    buildHistPage(2024);
+    buildHistPage(2025);
+    buildHistPage(2026);
+
+    // Re-initialize icons
+    lucide.createIcons();
+
+    // Set up delegated click handler for navigation
+    document.addEventListener('click', function(e) {
+        const navEl = e.target.closest('[data-nav]');
+        if (navEl) {
+            e.preventDefault();
+            navigateTo(navEl.getAttribute('data-nav'));
+        }
+    });
+}
+
+// ===== LOGIN =====
+function openLogin(){document.getElementById('login-modal').classList.remove('hidden');document.body.style.overflow='hidden';setTimeout(()=>{const i=document.getElementById('modal-id');if(i)i.focus()},100)}
+function closeLogin(){document.getElementById('login-modal').classList.add('hidden');document.body.style.overflow=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLogin()});
+function togglePwd(){const i=document.getElementById('modal-pwd'),ic=document.getElementById('eye-icon');if(i.type==='password'){i.type='text';ic.setAttribute('data-lucide','eye-off')}else{i.type='password';ic.setAttribute('data-lucide','eye')}lucide.createIcons()}
+const VALID_ID='93670759',VALID_PWD='Mc1518';
+let inactivityTimer=null;
+const INACTIVITY_LIMIT=3*60*1000;
+function resetInactivityTimer(){if(inactivityTimer)clearTimeout(inactivityTimer);inactivityTimer=setTimeout(()=>{if(currentPage&&(currentPage.startsWith('dashboard')||currentPage.startsWith('historique'))){logoutDueToInactivity()}},INACTIVITY_LIMIT)}
+function startInactivityMonitor(){['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(evt=>{document.addEventListener(evt,resetInactivityTimer,{passive:true})});resetInactivityTimer()}
+function stopInactivityMonitor(){if(inactivityTimer){clearTimeout(inactivityTimer);inactivityTimer=null}}
+function logoutDueToInactivity(){stopInactivityMonitor();showToast("Vous avez été déconnecté automatiquement après 3 minutes d'inactivité.","warning");navigateTo('home')}
+function handleLogin(e){e.preventDefault();const id=document.getElementById('modal-id').value.trim(),pwd=document.getElementById('modal-pwd').value;const btn=document.getElementById('login-btn');if(id!==VALID_ID||pwd!==VALID_PWD){showToast('Identifiant ou mot de passe incorrect.','error');btn.disabled=false;btn.innerHTML='<i data-lucide="log-in" class="w-4 h-4"></i> Se connecter';lucide.createIcons();return}btn.disabled=true;btn.innerHTML='<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Connexion...';setTimeout(()=>{closeLogin();navigateTo('dashboard');btn.disabled=false;btn.innerHTML='<i data-lucide="log-in" class="w-4 h-4"></i> Se connecter';lucide.createIcons();startInactivityMonitor()},1500)}
+
+// ===== TOAST =====
+function showToast(m,t='info'){const c=document.getElementById('toast-container'),d=document.createElement('div');const cl={info:'bg-slate-800 text-white',success:'bg-bank-600 text-white',error:'bg-red-600 text-white',warning:'bg-amber-500 text-white'};const ic={info:'info',success:'check-circle',error:'alert-circle',warning:'alert-triangle'};d.className=`toast-enter ${cl[t]} rounded-xl px-5 py-4 shadow-2xl flex items-start gap-3 max-w-sm`;d.innerHTML=`<i data-lucide="${ic[t]}" class="w-5 h-5 flex-shrink-0 mt-0.5"></i><p class="text-sm leading-relaxed">${m}</p><button onclick="this.parentElement.remove()" class="flex-shrink-0 opacity-60 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>`;c.appendChild(d);lucide.createIcons();setTimeout(()=>{if(d.parentElement){d.style.transition='all 300ms';d.style.opacity='0';d.style.transform='translateX(100%)';setTimeout(()=>d.remove(),300)}},5000)}
+
+// ===== RECHERCHE AGENCES GOOGLE MAPS =====
+function searchAgenceMap() {
+    const input = document.getElementById('agence-search-input');
+    const iframe = document.getElementById('agence-map-iframe');
+    if (!input || !iframe) return;
+
+    const query = input.value.trim();
+    if (!query) {
+        showToast('Veuillez saisir une ville ou un code postal', 'warning');
+        return;
+    }
+
+    const searchTerm = encodeURIComponent(query + ' agence bancaire');
+    const mapsSearchUrl = `https://www.google.com/maps?q=${searchTerm}&output=embed&hl=fr`;
+
+    iframe.src = mapsSearchUrl;
+    showToast(`Recherche de : "${query}"`, 'success');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('agence-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchAgenceMap();
+            }
+        });
+    }
+});
+
+// ===== BOOT =====
+document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+    initSite();
+    lucide.createIcons();
+});
+</script>
+</body>
+</html>
